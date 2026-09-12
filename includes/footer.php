@@ -119,7 +119,56 @@ $quickLinks = [
 window.__FLASH__ = <?= json_encode($flashes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 <?php endif; ?>
+<?php
+// ============================================================
+// Floating quick-contact buttons (WhatsApp / Email / Call / SMS)
+// Only renders buttons for which the profile has data.
+// ============================================================
+$wa   = trim((string)($profile['whatsapp'] ?? ''));
+$mail = trim((string)($profile['email']    ?? ''));
+$tel  = trim((string)($profile['phone']    ?? ''));
 
+$waDigits  = $wa   ? preg_replace('/\D+/', '', $wa)   : '';
+$telDigits = $tel  ? preg_replace('/\D+/', '', $tel)  : '';
+$waMsg     = rawurlencode("Hi " . ($profile['full_name'] ?? 'there') . ", I'd like to talk about a project.");
+?>
+
+<?php if ($waDigits || $mail || $telDigits): ?>
+<div class="quick-contact" aria-label="Quick contact">
+    <?php if ($waDigits): ?>
+        <a href="https://wa.me/<?= e($waDigits) ?>?text=<?= $waMsg ?>"
+           target="_blank" rel="noopener"
+           class="quick-contact__btn quick-contact__btn--whatsapp"
+           aria-label="Chat on WhatsApp" data-tooltip="WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+    <?php endif; ?>
+
+    <?php if ($mail): ?>
+        <a href="mailto:<?= e($mail) ?>"
+           class="quick-contact__btn quick-contact__btn--email"
+           aria-label="Send an email" data-tooltip="Email">
+            <i class="fas fa-envelope"></i>
+        </a>
+    <?php endif; ?>
+
+    <?php if ($telDigits): ?>
+        <a href="tel:<?= e($telDigits) ?>"
+           class="quick-contact__btn quick-contact__btn--call"
+           aria-label="Call me" data-tooltip="Call">
+            <i class="fas fa-phone"></i>
+        </a>
+    <?php endif; ?>
+
+    <?php if ($telDigits): ?>
+        <a href="sms:<?= e($telDigits) ?>?body=<?= $waMsg ?>"
+           class="quick-contact__btn quick-contact__btn--sms"
+           aria-label="Send an SMS" data-tooltip="SMS">
+            <i class="fas fa-comment-dots"></i>
+        </a>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
 <script src="<?= asset('js/script.js') ?>" defer></script>
 </body>
 </html>

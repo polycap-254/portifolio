@@ -1478,3 +1478,618 @@ body.is-ready [data-reveal] { will-change: opacity, transform; }
   /* Page margins */
   @page { margin: 1.4cm; }
 }
+
+/* =============================================================
+   FLOATING QUICK-CONTACT BUTTONS
+   ============================================================= */
+.quick-contact {
+  position: fixed;
+  right: 22px;
+  bottom: 84px;                /* sits above the back-to-top button */
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+
+.quick-contact__btn {
+  --brand-color: var(--brand-2);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--brand-color);
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--brand-color) 70%, transparent),
+              0 2px 6px rgba(0,0,0,.15);
+  transition: transform var(--t-fast), box-shadow var(--t-med), filter var(--t-fast);
+  text-decoration: none;
+}
+.quick-contact__btn i { font-size: 1.15rem; line-height: 1; }
+
+.quick-contact__btn:hover,
+.quick-contact__btn:focus-visible {
+  transform: translateY(-2px) scale(1.06);
+  filter: brightness(1.05);
+  box-shadow: 0 14px 30px -8px color-mix(in srgb, var(--brand-color) 85%, transparent),
+              0 4px 10px rgba(0,0,0,.2);
+}
+.quick-contact__btn:active { transform: translateY(0) scale(1); }
+
+/* Tooltip (label slides out to the left on hover) */
+.quick-contact__btn::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .35rem .65rem;
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+.quick-contact__btn:hover::before,
+.quick-contact__btn:focus-visible::before {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Brand colours — official-ish */
+.quick-contact__btn--whatsapp { --brand-color: #25D366; }  /* WhatsApp green */
+.quick-contact__btn--email    { --brand-color: #EA4335; }  /* Gmail red     */
+.quick-contact__btn--call     { --brand-color: #0A84FF; }  /* iOS blue      */
+.quick-contact__btn--sms      { --brand-color: #F59E0B; }  /* Amber / SMS   */
+
+/* Gentle attention pulse on the WhatsApp button only (the primary one) */
+@keyframes qc-pulse {
+  0%   { box-shadow: 0 0 0 0    rgba(37,211,102,.55),
+                     0 10px 24px -8px rgba(37,211,102,.7); }
+  70%  { box-shadow: 0 0 0 14px rgba(37,211,102,0),
+                     0 10px 24px -8px rgba(37,211,102,.7); }
+  100% { box-shadow: 0 0 0 0    rgba(37,211,102,0),
+                     0 10px 24px -8px rgba(37,211,102,.7); }
+}
+.quick-contact__btn--whatsapp { animation: qc-pulse 2.6s var(--ease) infinite; }
+.quick-contact__btn--whatsapp:hover { animation: none; }
+
+/* Responsive: shrink a bit on mobile, and shift left edge */
+@media (max-width: 640px) {
+  .quick-contact { right: 14px; bottom: 78px; gap: .45rem; }
+  .quick-contact__btn { width: 42px; height: 42px; }
+  .quick-contact__btn i { font-size: 1rem; }
+  .quick-contact__btn::before { display: none; }   /* tooltips off on touch */
+}
+
+/* Print: hide */
+@media print {
+  .quick-contact { display: none !important; }
+}
+
+/* Reduced motion: no pulse */
+@media (prefers-reduced-motion: reduce) {
+  .quick-contact__btn,
+  .quick-contact__btn--whatsapp { animation: none; }
+}
+
+/* =============================================================
+   FOOTER — refined column layout
+   ============================================================= */
+
+/* Wider, calmer container */
+.site-footer {
+  margin-top: 4rem;
+  border-top: 1px solid var(--border);
+  background:
+    radial-gradient(900px 400px at 0% 0%,   color-mix(in srgb, var(--brand-1) 6%, transparent), transparent 60%),
+    radial-gradient(900px 400px at 100% 100%, color-mix(in srgb, var(--brand-3) 6%, transparent), transparent 60%),
+    color-mix(in srgb, var(--bg-soft) 55%, var(--bg));
+}
+
+/* Grid: 4 columns on desktop, 2 on tablet, 1 on mobile */
+.footer__grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+  gap: 2.5rem 2rem;
+  padding: 3.5rem 0 2.5rem;
+  align-items: start;
+}
+
+/* Column base */
+.footer__col { min-width: 0; }
+.footer__col--brand { padding-right: 1rem; }
+
+/* Brand block */
+.footer__brand {
+  display: inline-flex; align-items: center; gap: .7rem;
+  font-weight: 700; font-size: 1.05rem;
+  color: var(--text);
+  margin-bottom: .85rem;
+  letter-spacing: -.01em;
+}
+.footer__brand-mark {
+  display: grid; place-items: center;
+  width: 38px; height: 38px; border-radius: 11px;
+  background: linear-gradient(135deg, var(--brand-1), var(--brand-3));
+  color: #fff;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: .95rem;
+  box-shadow: 0 8px 20px -8px rgba(99,102,241,.7);
+}
+.footer__tagline {
+  font-size: .93rem;
+  color: var(--text-soft);
+  line-height: 1.6;
+  max-width: 34ch;
+  margin: 0 0 1.1rem;
+}
+
+/* Column headers — small caps + underline accent */
+.footer__heading {
+  display: inline-block;
+  position: relative;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--text);
+  margin: 0 0 1.1rem;
+  padding-bottom: .45rem;
+}
+.footer__heading::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 26px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--brand-1), var(--brand-3));
+}
+
+/* Links list */
+.footer__links {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: grid; gap: .55rem;
+}
+.footer__links li {
+  font-size: .9rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+.footer__links a {
+  display: inline-flex; align-items: center; gap: .35rem;
+  color: var(--text-soft);
+  transition: color var(--t-fast), transform var(--t-fast);
+}
+.footer__links a::before {
+  content: '';
+  width: 0; height: 1px;
+  background: var(--brand-2);
+  transition: width var(--t-fast);
+  display: inline-block;
+  vertical-align: middle;
+}
+.footer__links a:hover {
+  color: var(--brand-2);
+  transform: translateX(3px);
+}
+.footer__links a:hover::before { width: 12px; }
+
+/* Contact list with icons */
+.footer__contact li {
+  display: flex; align-items: flex-start; gap: .6rem;
+  font-size: .9rem;
+  word-break: break-word;
+}
+.footer__contact i {
+  color: var(--brand-2);
+  margin-top: .18rem;
+  width: 16px;
+  flex: none;
+}
+.footer__contact a { word-break: break-all; }
+
+/* Socials — pill row */
+.footer__socials {
+  list-style: none; padding: 0; margin: 1.2rem 0 0;
+  display: flex; flex-wrap: wrap; gap: .5rem;
+}
+.footer__socials a {
+  display: grid; place-items: center;
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  transition: transform var(--t-fast), color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
+}
+.footer__socials a:hover {
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand-1), var(--brand-3));
+  border-color: transparent;
+  transform: translateY(-3px);
+}
+
+/* CTA button in contact column */
+.footer__cta {
+  margin-top: 1.1rem;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Bottom bar */
+.footer__bottom {
+  border-top: 1px solid var(--border);
+  padding: 1.15rem 0;
+  background: color-mix(in srgb, var(--bg-soft) 40%, transparent);
+}
+.footer__bottom-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: .85rem;
+  color: var(--muted);
+}
+.footer__bottom p { margin: 0; }
+.footer__built {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  letter-spacing: .02em;
+  opacity: .85;
+}
+
+/* ---------- Responsive footer ---------- */
+@media (max-width: 1024px) {
+  .footer__grid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 2rem;
+  }
+  /* Move the Contact column to full width on the second row */
+  .footer__col--brand      { grid-column: span 3; padding-right: 0; }
+  .footer__col--brand + .footer__col,
+  .footer__col--brand + .footer__col + .footer__col {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .footer__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem 1.5rem;
+    padding: 2.75rem 0 1.75rem;
+  }
+  .footer__col--brand { grid-column: span 2; }
+  .footer__col--brand + .footer__col,
+  .footer__col--brand + .footer__col + .footer__col { grid-column: span 1; }
+  /* Last column (contact) goes full width */
+  .footer__grid > .footer__col:last-child { grid-column: span 2; }
+}
+
+@media (max-width: 480px) {
+  .footer__grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+  .footer__col--brand,
+  .footer__col--brand + .footer__col,
+  .footer__col--brand + .footer__col + .footer__col,
+  .footer__grid > .footer__col:last-child { grid-column: auto; }
+  .footer__bottom-inner { flex-direction: column; text-align: center; }
+  .footer__cta { width: auto; }
+}
+
+/* Print: cleaner footer */
+@media print {
+  .site-footer { background: #fff !important; margin-top: 1.5rem; }
+  .footer__grid { grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem 0; }
+  .footer__socials, .footer__cta { display: none !important; }
+}
+
+/* =============================================================
+   FOOTER — always-dark (overrides light/dark theme)
+   ============================================================= */
+.site-footer {
+  --bg:        #0b1120;
+  --bg-elev:   #131c31;
+  --bg-soft:   #16213a;
+  --text:      #e6edf7;
+  --text-soft: #b7c2d6;
+  --muted:     #8a97b1;
+  --border:    #1f2b45;
+  --glass-bg:     rgba(255, 255, 255, .04);
+  --glass-border: rgba(255, 255, 255, .08);
+
+  color: var(--text);
+  background:
+    radial-gradient(900px 400px at 0% 0%,   rgba(99,102,241,.10), transparent 60%),
+    radial-gradient(900px 400px at 100% 100%, rgba(6,182,212,.10),  transparent 60%),
+    linear-gradient(180deg, #0b1120 0%, #0a0f1c 100%);
+  border-top: 1px solid rgba(255, 255, 255, .06);
+}
+
+/* Softer separators and headings on dark */
+.site-footer .footer__heading { color: #f1f5ff; }
+.site-footer .footer__heading::after {
+  background: linear-gradient(90deg, #818cf8, #22d3ee);
+}
+.site-footer .footer__links li,
+.site-footer .footer__links a,
+.site-footer .footer__contact li { color: #b7c2d6; }
+.site-footer .footer__links a:hover { color: #a5b4fc; }
+.site-footer .footer__links a::before { background: #a5b4fc; }
+
+/* Brand mark stays gradient */
+.site-footer .footer__brand { color: #f1f5ff; }
+.site-footer .footer__brand-mark {
+  box-shadow: 0 10px 24px -8px rgba(99,102,241,.8);
+}
+
+/* Contact icons get a soft glow on dark */
+.site-footer .footer__contact i {
+  color: #22d3ee;
+  filter: drop-shadow(0 0 6px rgba(34,211,238,.35));
+}
+
+/* Social pills */
+.site-footer .footer__socials a {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.08);
+  color: #cbd5e1;
+}
+.site-footer .footer__socials a:hover {
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1, #06b6d4);
+  border-color: transparent;
+  box-shadow: 0 12px 28px -10px rgba(99,102,241,.8);
+}
+
+/* Outline button on dark */
+.site-footer .btn--outline {
+  color: #e6edf7;
+  border-color: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.02);
+}
+.site-footer .btn--outline:hover {
+  color: #fff;
+  border-color: #a5b4fc;
+  background: rgba(165,180,252,.10);
+}
+
+/* Bottom bar */
+.site-footer .footer__bottom {
+  border-top: 1px solid rgba(255,255,255,.06);
+  background: rgba(0,0,0,.25);
+}
+.site-footer .footer__bottom,
+.site-footer .footer__bottom p,
+.site-footer .footer__built { color: #8a97b1; }
+
+/* Optional: subtle divider glow between grid and bottom bar */
+.site-footer .footer__bottom {
+  position: relative;
+}
+.site-footer .footer__bottom::before {
+  content: '';
+  position: absolute; top: -1px; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(129,140,248,.35) 30%,
+    rgba(34,211,238,.35) 70%,
+    transparent 100%);
+}
+
+/* Print: keep it light for paper */
+@media print {
+  .site-footer {
+    background: #fff !important;
+    color: #111 !important;
+    border-top: 1px solid #d1d5db !important;
+  }
+  .site-footer .footer__heading,
+  .site-footer .footer__links a,
+  .site-footer .footer__contact li,
+  .site-footer .footer__bottom,
+  .site-footer .footer__built { color: #111 !important; }
+  .site-footer .footer__socials { display: none !important; }
+}
+
+/* =============================================================
+   THEME OVERRIDE — IBIZA SUNSET PALETTE
+   Replaces the previous indigo → violet → cyan gradient.
+   Placed last so it wins all earlier :root declarations.
+   ============================================================= */
+:root {
+  /* Brand trio used everywhere a gradient is applied */
+  --brand-1: #ff3d81;   /* deep coral-pink (sun top)  */
+  --brand-2: #ff8c42;   /* hot orange (sun mid)        */
+  --brand-3: #ffcb6b;   /* golden peach (sun bottom)   */
+  --accent:  #ff9ecb;   /* soft pink halo              */
+
+  /* Focus ring tone */
+  --ring: rgba(255, 92, 122, .40);
+
+  /* Body background glows */
+  --sun-1: rgba(255, 61, 129, .10);
+  --sun-2: rgba(255, 140, 66, .10);
+}
+
+[data-theme="dark"] {
+  --brand-1: #ff4d8d;
+  --brand-2: #ff9550;
+  --brand-3: #ffd27a;
+  --accent:  #ff9ecb;
+  --ring:    rgba(255, 100, 140, .50);
+
+  --sun-1: rgba(255, 61, 129, .14);
+  --sun-2: rgba(255, 140, 66, .14);
+}
+
+/* Swap the body's ambient blue glows for sunset glows */
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--sun-1), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%,   var(--sun-2), transparent 60%),
+    var(--bg);
+}
+
+/* Hero decorative ring shadow follows the palette */
+.profile-ring {
+  background: conic-gradient(from 210deg, #ff3d81, #ff8c42, #ffcb6b, #ff9ecb, #ff3d81);
+  box-shadow: 0 30px 70px -30px rgba(255, 61, 129, .75);
+}
+.profile-ring::after {
+  background: radial-gradient(circle at 30% 20%, rgba(255, 140, 66, .28), transparent 60%);
+}
+
+/* Brand mark (navbar + footer + login) */
+.navbar__brand-mark,
+.footer__brand-mark,
+.login-card__head .navbar__brand-mark {
+  background: linear-gradient(135deg, #ff3d81, #ff8c42 55%, #ffcb6b);
+  box-shadow: 0 8px 22px -8px rgba(255, 92, 122, .7);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(120deg, #ff3d81, #ff8c42 45%, #ffcb6b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Primary buttons */
+.btn--primary {
+  background: linear-gradient(120deg, #ff3d81, #ff8c42);
+  box-shadow: 0 8px 22px -10px rgba(255, 92, 122, .75);
+}
+.btn--primary:hover {
+  box-shadow: 0 14px 30px -10px rgba(255, 92, 122, .9);
+}
+
+/* Section eyebrow dot */
+.eyebrow::before {
+  background: linear-gradient(120deg, #ff3d81, #ffcb6b);
+}
+.eyebrow { color: #ff7a9d; }
+
+/* Skill bars + active tabs + sidebar active */
+.skill__bar span {
+  background: linear-gradient(90deg, #ff3d81, #ff8c42 60%, #ffcb6b);
+}
+.tab.is-active {
+  background: linear-gradient(120deg, #ff3d81, #ff8c42);
+  box-shadow: 0 8px 22px -10px rgba(255, 92, 122, .75);
+}
+.admin-sidebar__link.is-active {
+  background: linear-gradient(120deg, #ff3d81, #ff8c42);
+  box-shadow: 0 8px 20px -10px rgba(255, 92, 122, .8);
+}
+
+/* Social icon gradient hover */
+.hero__socials a:hover,
+.footer__socials a:hover {
+  background: linear-gradient(135deg, #ff3d81, #ff8c42 55%, #ffcb6b);
+}
+.quick-contact__btn--call { --brand-color: #ff8c42; }  /* swap blue call to orange */
+.quick-contact__btn--sms  { --brand-color: #ff9ecb; }  /* swap amber sms to pink   */
+
+/* Back-to-top button */
+.back-to-top {
+  background: linear-gradient(135deg, #ff3d81, #ff8c42);
+  box-shadow: 0 12px 30px -10px rgba(255, 92, 122, .8);
+}
+
+/* Focus outline */
+:focus-visible { outline-color: #ff5c7a; }
+
+/* Scrollbar (chrome) */
+::-webkit-scrollbar-thumb:hover { background: #ff8c42; }
+
+/* ---------- Footer: sunset glow instead of blue/cyan ---------- */
+.site-footer {
+  background:
+    radial-gradient(900px 400px at 0% 0%,   rgba(255, 61, 129, .14), transparent 60%),
+    radial-gradient(900px 400px at 100% 100%, rgba(255, 140, 66, .14), transparent 60%),
+    linear-gradient(180deg, #1a0f1e 0%, #0d0710 100%);
+  border-top: 1px solid rgba(255, 140, 66, .12);
+}
+.site-footer .footer__heading::after {
+  background: linear-gradient(90deg, #ff3d81, #ffcb6b);
+}
+.site-footer .footer__contact i {
+  color: #ff9c66;
+  filter: drop-shadow(0 0 6px rgba(255, 140, 66, .45));
+}
+.site-footer .footer__links a:hover { color: #ff9ecb; }
+.site-footer .footer__links a::before { background: #ff9ecb; }
+.site-footer .footer__socials a:hover {
+  background: linear-gradient(135deg, #ff3d81, #ff8c42 55%, #ffcb6b);
+  box-shadow: 0 12px 28px -10px rgba(255, 92, 122, .8);
+}
+.site-footer .btn--outline:hover {
+  border-color: #ff9ecb;
+  background: rgba(255, 158, 203, .10);
+}
+.site-footer .footer__bottom::before {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 92, 122, .4) 30%,
+    rgba(255, 203, 107, .4) 70%,
+    transparent 100%);
+}
+
+/* ---------- Project card & service hover borders ---------- */
+.about-card:hover,
+.service:hover,
+.project-card:hover {
+  border-color: rgba(255, 140, 66, .55);
+}
+.project-card::before {
+  background: linear-gradient(120deg,
+    transparent 30%,
+    rgba(255, 140, 66, .14) 50%,
+    transparent 70%);
+}
+
+/* ---------- Skill bar glow on complete ---------- */
+.skill.is-visible .skill__bar span {
+  box-shadow: 0 0 12px -2px rgba(255, 140, 66, .55);
+}
+
+/* ---------- Secondary detail fixes ---------- */
+.timeline__dot {
+  border-color: #ff6a95;
+  color: #ff6a95;
+  box-shadow: 0 0 0 4px rgba(255, 92, 122, .15);
+}
+.timeline__card .org,
+.service__cta,
+.about-card__hint,
+.project-card__cat { color: #ff6a95; }
+
+.contact__row i,
+.service__icon,
+.about-card__icon,
+.skill__icon {
+  color: #ff8c42;
+  background: linear-gradient(135deg, rgba(255, 61, 129, .14), rgba(255, 203, 107, .14));
+}
+
+.contact__row:hover { border-color: #ff8c42; }
+
+/* ---------- Print: keep sunset off paper ---------- */
+@media print {
+  .gradient-text,
+  .hero__title span { color: #111 !important; -webkit-text-fill-color: #111 !important; }
+}
