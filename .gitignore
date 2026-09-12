@@ -1,0 +1,48 @@
+# =========================================================
+# PHP / Apache
+# =========================================================
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================================================
+# Local config overrides (never commit credentials)
+# =========================================================
+config/config.local.php
+.env
+.env.local
+*.env
+
+# =========================================================
+# User uploads — keep the folders, ignore their contents
+# =========================================================
+uploads/profile/*
+!uploads/profile/.gitkeep
+uploads/projects/*
+!uploads/projects/.gitkeep
+
+# =========================================================
+# IDE / Editor
+# =========================================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# =========================================================
+# OS / misc
+# =========================================================
+.cache/
+node_modules/
+
+# =========================================================
+# Dev-only scripts (never commit)
+# =========================================================
+test.php
+index.stub.php
+database/reset_admin.php
+database/fix_admin_password.php
