@@ -436,9 +436,12 @@ try {
                 <button type="button"
                         class="btn btn--primary btn--sm"
                         data-open-project
-                        data-gallery="<?= e(implode(',', array_map(
+                       data-gallery="<?= e(implode(',', array_map(
     fn($gi) => url($gi['image']),
-    array_filter($pdo->query('SELECT image FROM project_images WHERE project_id='.(int)$p['id'].' ORDER BY display_order')->fetchAll(), fn($gi) => file_exists(__DIR__ . '/' . $gi['image']))
+    array_filter(
+        $pdo->query('SELECT image FROM project_images WHERE project_id=' . (int)$p['id'] . ' ORDER BY display_order, id')->fetchAll(),
+        fn($gi) => file_exists(__DIR__ . '/' . $gi['image'])
+    )
 ))) ?>"
                         data-name="<?= e($p['name']) ?>"
                         data-category="<?= e($p['category']) ?>"
@@ -483,9 +486,18 @@ try {
     <button class="modal__close" type="button" data-modal-close aria-label="Close">
       <i class="fas fa-times"></i>
     </button>
-    <div class="modal__media" data-modal-media>
-      <img src="" alt="" data-modal-image>
-    </div>
+   <div class="modal__media" data-modal-media>
+  <!-- Single image fallback -->
+  <img src="" alt="" data-modal-image>
+
+  <!-- Gallery carousel (hidden by default; shown only if the project has extra images) -->
+  <div class="carousel carousel--compact" id="modalGallery" style="display:none;" data-autoplay="false">
+    <div class="carousel__track"></div>
+    <button class="carousel__btn carousel__btn--prev" type="button" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+    <button class="carousel__btn carousel__btn--next" type="button" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+    <div class="carousel__dots" role="tablist"></div>
+  </div>
+</div>
     <div class="modal__body">
       <h3 class="modal__title" id="projectModalTitle" data-modal-name>—</h3>
       <div class="modal__meta">

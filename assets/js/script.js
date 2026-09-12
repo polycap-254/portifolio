@@ -244,11 +244,54 @@
       const set = (sel, val) => { const n = this.el.querySelector(sel); if (n) n.textContent = val || ''; };
       const setAttr = (sel, attr, val) => { const n = this.el.querySelector(sel); if (n && val) n.setAttribute(attr, val); };
 
-      const img = this.el.querySelector('[data-modal-image]');
-      if (img) {
-        if (data.image) { img.src = data.image; img.alt = data.name || 'Project'; img.style.display = ''; }
+     // -------- Gallery handling --------
+const media   = this.el.querySelector('[data-modal-media]');
+const img     = this.el.querySelector('[data-modal-image]');
+const gallery = this.el.querySelector('#modalGallery');
+
+// Collect gallery URLs from data-gallery (comma-separated) plus fallback data.image
+const extraImgs = (data.gallery || '').split(',').map(s => s.trim()).filter(Boolean);
+const allImgs   = data.image ? [data.image, ...extraImgs] : extraImgs;
+
+if (media) media.style.display = allImgs.length ? '' : 'none';
+
+if (allImgs.length >= 2 && gallery) {
+    // Show carousel, hide single image
+    if (img) img.style.display = 'none';
+    gallery.style.display = '';
+
+    // Build slides
+    const track = gallery.querySelector('.carousel__track');
+    const dots  = gallery.querySelector('.carousel__dots');
+    track.innerHTML = '';
+    dots.innerHTML = '';
+    allImgs.forEach((src, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'carousel__slide';
+        const im = document.createElement('img');
+        im.src = src;
+        im.alt = (data.name || 'Project') + ' image ' + (i + 1);
+        im.loading = 'lazy';
+        slide.appendChild(im);
+        track.appendChild(slide);
+
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'carousel__dot' + (i === 0 ? ' is-active' : '');
+        dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+        dots.appendChild(dot);
+    });
+
+    // Init carousel (avoids double-init via data-carouselInit)
+    if (window.initCarousels) window.initCarousels(media);
+} else {
+    // Single image fallback
+    if (gallery) gallery.style.display = 'none';
+    if (img) {
+        if (allImgs[0]) { img.src = allImgs[0]; img.alt = data.name || 'Project'; img.style.display = ''; }
         else { img.style.display = 'none'; }
-      }
+    }
+}
       set('[data-modal-category]', data.category);
       set('[data-modal-name]', data.name);
       set('[data-modal-year]', data.year ? '• ' + data.year : '');
@@ -276,9 +319,19 @@
       document.body.style.overflow = 'hidden';
     },
     close() {
-      this.el.classList.remove('is-open');
-      document.body.style.overflow = '';
+    this.el.classList.remove('is-open');
+    document.body.style.overflow = '';
+    // Reset modal gallery so the next open starts clean
+    const gallery = this.el.querySelector('#modalGallery');
+    if (gallery) {
+        gallery.style.display = 'none';
+        const track = gallery.querySelector('.carousel__track');
+        const dots  = gallery.querySelector('.carousel__dots');
+        if (track) track.innerHTML = '';
+        if (dots)  dots.innerHTML  = '';
+        gallery.removeAttribute('data-carousel-init');
     }
+}
   };
 
   /* ---------- TOASTS ---------- */
