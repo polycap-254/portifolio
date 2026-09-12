@@ -51,6 +51,8 @@ $canonical       = url(currentPath());
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="<?= asset('images/icons/favicon.svg') ?>">
+    <link rel="alternate icon" type="image/png" href="<?= asset('images/icons/favicon.svg') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('images/icons/favicon.svg') ?>">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

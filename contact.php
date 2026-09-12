@@ -115,6 +115,7 @@ try {
     ]);
 
     clearOld();
+    $_SESSION['contact_sent'] = true;
     setFlash('success', 'Thanks, ' . $name . '! Your message has been sent. I will reply soon.');
 } catch (Throwable $e) {
     if (APP_ENV === 'development') {

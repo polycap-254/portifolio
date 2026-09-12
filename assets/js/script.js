@@ -460,3 +460,99 @@
     });
   });
 })();
+
+/* ---------- GLOBAL: Esc closes any open modal ---------- */
+(function () {
+  'use strict';
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.modal.is-open').forEach(m => {
+      m.classList.remove('is-open');
+      m.setAttribute('aria-hidden', 'true');
+    });
+    document.body.style.overflow = '';
+  });
+})();
+
+/* ---------- TOAST PROGRESS ENHANCEMENT ---------- */
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!window.toast || typeof window.toast.show !== 'function') return;
+    const original = window.toast.show.bind(window.toast);
+    window.toast.show = function (type, message, timeout = 5000) {
+      original(type, message, timeout);
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const last = stack.lastElementChild;
+      if (last) last.style.setProperty('--toast-duration', timeout + 'ms');
+    };
+  });
+})();
+
+/* ---------- GLOBAL: Esc closes any open modal ---------- */
+(function () {
+  'use strict';
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.modal.is-open').forEach(m => {
+      m.classList.remove('is-open');
+      m.setAttribute('aria-hidden', 'true');
+    });
+    document.body.style.overflow = '';
+  });
+})();
+
+/* ---------- PAGE READY MARKER (drives skeleton fade) ---------- */
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', () => {
+    // Small delay to let IntersectionObserver register reveals
+    requestAnimationFrame(() => document.body.classList.add('is-ready'));
+  });
+})();
+
+/* ---------- ADMIN KEYBOARD SHORTCUTS ---------- */
+(function () {
+  'use strict';
+  if (!document.body.classList.contains('admin-body')) return;
+
+  document.addEventListener('keydown', (e) => {
+    const meta = e.ctrlKey || e.metaKey;
+
+    // Ctrl+S / Cmd+S — save nearest form
+    if (meta && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      const forms = [...document.querySelectorAll('form')].filter(f =>
+        f.offsetParent !== null &&
+        !f.querySelector('[data-skip-shortcut]') &&
+        f.method.toLowerCase() === 'post'
+      );
+      if (forms.length) {
+        forms[0].requestSubmit ? forms[0].requestSubmit() : forms[0].submit();
+      } else {
+        window.toast && window.toast.show('info', 'No form to save on this page.');
+      }
+      return;
+    }
+
+    // Ctrl+/ — jump to Dashboard
+    if (meta && e.key === '/') {
+      e.preventDefault();
+      const base = document.querySelector('link[rel="icon"]')?.href?.split('/assets/')[0] || '';
+      location.href = base + '/admin/dashboard.php';
+      return;
+    }
+  });
+
+  // Small hint in the topbar
+  document.addEventListener('DOMContentLoaded', () => {
+    const bar = document.querySelector('.admin-topbar__actions');
+    if (!bar || bar.querySelector('.admin-shortcut-hint')) return;
+    const hint = document.createElement('span');
+    hint.className = 'admin-shortcut-hint hide-sm';
+    hint.innerHTML = '<i class="fas fa-keyboard"></i> Ctrl+S to save · Ctrl+/ Dashboard';
+    hint.style.cssText = 'font-size:.75rem;color:var(--muted);margin-left:.5rem;white-space:nowrap;';
+    bar.appendChild(hint);
+  });
+})();

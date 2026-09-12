@@ -14,6 +14,9 @@
  */
 
 require_once __DIR__ . '/includes/functions.php';
+// Consume one-shot contact-success flag
+$contactSent = !empty($_SESSION['contact_sent']);
+unset($_SESSION['contact_sent']);
 
 $pageTitle       = 'Home';
 $pageDescription = 'Portfolio of Polycap Nyamongo Maturwe — Mathematics & Computer Studies Educator, Web Developer, and Technology Enthusiast based in Nairobi, Kenya.';
@@ -620,6 +623,18 @@ $aboutData = [
       </div>
 
       <!-- Contact form -->
+       <?php if ($contactSent): ?>
+<div class="contact-form contact-form--success">
+    <div class="empty-state" style="border-style:solid;border-color:#10b981;background:color-mix(in srgb,#10b981 6%, var(--bg-elev));">
+        <i class="fas fa-circle-check" style="color:#10b981;"></i>
+        <h3 style="margin-bottom:.5rem;color:var(--text);">Message sent!</h3>
+        <p>Thanks for reaching out. I'll get back to you within 24 hours.</p>
+        <a href="<?= url('/#contact') ?>" class="btn btn--ghost btn--sm" style="margin-top:1rem;">
+            <i class="fas fa-rotate-right"></i> Send another message
+        </a>
+    </div>
+</div>
+<?php else: ?>
       <form class="contact-form"
             method="post"
             action="<?= url('/contact.php') ?>"
@@ -665,6 +680,7 @@ $aboutData = [
           <i class="fas fa-paper-plane"></i> Send Message
         </button>
       </form>
+      <?php endif; ?>
     </div>
   </div>
 </section>
