@@ -46,3 +46,5 @@ test.php
 index.stub.php
 database/reset_admin.php
 database/fix_admin_password.php
+uploads/gallery/*
+!uploads/gallery/.gitkeep

@@ -226,6 +226,42 @@ $aboutData = [
         <span class="about-card__hint">Read more <i class="fas fa-arrow-right"></i></span>
       </article>
     </div>
+    <?php
+// About Me gallery carousel
+$galleryImgs = [];
+try {
+    $galleryImgs = $pdo->query(
+        'SELECT * FROM gallery_images WHERE is_active = 1 ORDER BY display_order, id'
+    )->fetchAll();
+} catch (Throwable $e) { $galleryImgs = []; }
+?>
+<?php if ($galleryImgs): ?>
+<div class="mt-3" data-reveal>
+    <div class="carousel" data-autoplay="true" data-interval="5000" aria-roledescription="carousel" aria-label="Photos of Polycap">
+        <div class="carousel__track">
+            <?php foreach ($galleryImgs as $g):
+                $has = $g['image'] && file_exists(__DIR__ . '/' . $g['image']);
+            ?>
+                <div class="carousel__slide">
+                    <?php if ($has): ?>
+                        <img src="<?= url($g['image']) ?>" alt="<?= e($g['title'] ?: 'Gallery photo') ?>" loading="lazy">
+                    <?php endif; ?>
+                    <?php if ($g['title'] || $g['caption']): ?>
+                        <div class="carousel__caption">
+                            <?php if ($g['title']): ?><strong><?= e($g['title']) ?></strong><?php endif; ?>
+                            <?php if ($g['caption']): ?><?= e($g['caption']) ?><?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <button class="carousel__btn carousel__btn--prev" type="button" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+        <button class="carousel__btn carousel__btn--next" type="button" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+        <div class="carousel__dots" role="tablist"></div>
+        <div class="carousel__progress"></div>
+    </div>
+</div>
+<?php endif; ?>
   </div>
 </section>
 
@@ -400,6 +436,10 @@ $aboutData = [
                 <button type="button"
                         class="btn btn--primary btn--sm"
                         data-open-project
+                        data-gallery="<?= e(implode(',', array_map(
+    fn($gi) => url($gi['image']),
+    array_filter($pdo->query('SELECT image FROM project_images WHERE project_id='.(int)$p['id'].' ORDER BY display_order')->fetchAll(), fn($gi) => file_exists(__DIR__ . '/' . $gi['image']))
+))) ?>"
                         data-name="<?= e($p['name']) ?>"
                         data-category="<?= e($p['category']) ?>"
                         data-year="<?= e($p['year']) ?>"

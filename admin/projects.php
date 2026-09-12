@@ -142,6 +142,43 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '
                     ]);
                     setFlash('success', 'Project added.');
                 }
+                if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '') === 'delete_image') {
+    if (verifyCsrf()) {
+        $iid = (int)($_POST['image_id'] ?? 0);
+        $pid = (int)($_POST['id'] ?? 0);
+        if ($iid > 0) {
+            $s = $pdo->prepare('SELECT image FROM project_images WHERE id=:id');
+            $s->execute([':id'=>$iid]);
+            $img = (string)$s->fetchColumn();
+            $pdo->prepare('DELETE FROM project_images WHERE id=:id')->execute([':id'=>$iid]);
+            if ($img && str_starts_with($img, 'uploads/')) {
+                $abs = __DIR__ . '/../' . $img;
+                if (file_exists($abs)) @unlink($abs);
+            }
+            setFlash('success', 'Gallery image removed.');
+        }
+    }
+    redirect(url('/admin/projects.php?action=edit&id=' . (int)($_POST['id'] ?? 0)));
+}
+                                // --- Extra project gallery images ---
+                if (!empty($_FILES['gallery_images']['tmp_name'][0])) {
+                    $gid = $editId > 0 ? $editId : (int)$pdo->lastInsertId();
+                    foreach ($_FILES['gallery_images']['tmp_name'] as $i => $tmp) {
+                        if (($_FILES['gallery_images']['error'][$i] ?? 1) !== UPLOAD_ERR_OK) continue;
+                        $single = [
+                            'tmp_name' => $tmp,
+                            'name'     => $_FILES['gallery_images']['name'][$i],
+                            'type'     => $_FILES['gallery_images']['type'][$i],
+                            'error'    => $_FILES['gallery_images']['error'][$i],
+                            'size'     => $_FILES['gallery_images']['size'][$i],
+                        ];
+                        $path = uploadImage($single, 'projects');
+                        if ($path) {
+                            $pdo->prepare('INSERT INTO project_images (project_id, image, display_order) VALUES (:p,:i,:o)')
+                                ->execute([':p'=>$gid, ':i'=>$path, ':o'=>999]);
+                        }
+                    }
+                }
                 clearOld();
                 redirect(url('/admin/projects.php'));
             } catch (Throwable $e) {
@@ -360,7 +397,40 @@ require_once __DIR__ . '/partials/admin_sidebar.php';
                 </div>
             </div>
         </div>
+<?php if (!empty($editing['id'])): ?>
+    <div class="panel__head" style="margin-top:1.5rem;">
+        <h2>Project Gallery Images</h2>
+    </div>
+    <?php
+      $extraImages = $pdo->prepare('SELECT * FROM project_images WHERE project_id = :pid ORDER BY display_order, id');
+      $extraImages->execute([':pid' => (int)$editing['id']]);
+      $extraImages = $extraImages->fetchAll();
+    ?>
+    <?php if ($extraImages): ?>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.75rem;margin-bottom:1rem;">
+            <?php foreach ($extraImages as $ei): ?>
+                <div style="position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+                    <img src="<?= url($ei['image']) ?>" alt="" style="width:100%;aspect-ratio:16/10;object-fit:cover;">
+                    <form method="post" style="position:absolute;top:6px;right:6px;" onsubmit="return confirm('Delete this gallery image?');">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="form_action" value="delete_image">
+                        <input type="hidden" name="image_id" value="<?= (int)$ei['id'] ?>">
+                        <input type="hidden" name="id" value="<?= (int)$editing['id'] ?>">
+                        <button class="btn-icon btn-icon--danger" type="submit" style="background:rgba(0,0,0,.5);color:#fff;border-color:transparent;"><i class="fas fa-trash"></i></button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <p class="muted" style="margin:0 0 1rem;">No extra images yet.</p>
+    <?php endif; ?>
 
+    <div class="form-group">
+        <label>Add Gallery Images (multiple)</label>
+        <input class="form-control" type="file" name="gallery_images[]" multiple accept="image/jpeg,image/png,image/webp,image/gif">
+        <div class="hint">Select one or more images. Each max 3 MB.</div>
+    </div>
+<?php endif; ?>
         <div class="admin-form-actions">
             <button type="submit" class="btn btn--primary">
                 <i class="fas fa-save"></i> <?= $action === 'edit' ? 'Update' : 'Create' ?>

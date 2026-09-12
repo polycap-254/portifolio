@@ -2289,3 +2289,127 @@ body {
   .gradient-text,
   .hero__title span { color: #111 !important; -webkit-text-fill-color: #111 !important; }
 }
+
+/* =============================================================
+   CAROUSEL (used in About Me gallery + project modal gallery)
+   ============================================================= */
+.carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.carousel__track {
+  display: flex;
+  transition: transform var(--t-slow);
+  will-change: transform;
+}
+.carousel__slide {
+  flex: 0 0 100%;
+  aspect-ratio: 16 / 10;
+  position: relative;
+  overflow: hidden;
+}
+.carousel__slide img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.carousel__caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1rem 1.2rem;
+  color: #fff;
+  font-size: .92rem;
+  background: linear-gradient(to top, rgba(0,0,0,.7), transparent);
+  pointer-events: none;
+}
+.carousel__caption strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: .15rem;
+}
+
+/* Buttons */
+.carousel__btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgba(0,0,0,.45);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: background var(--t-fast), transform var(--t-fast);
+}
+.carousel__btn:hover { background: rgba(0,0,0,.65); }
+.carousel__btn--prev { left: 12px; }
+.carousel__btn--next { right: 12px; }
+.carousel__btn[disabled] { opacity: .35; cursor: not-allowed; }
+
+/* Dots */
+.carousel__dots {
+  position: absolute;
+  left: 50%; bottom: 12px;
+  transform: translateX(-50%);
+  display: flex; gap: .4rem;
+  z-index: 3;
+  padding: .35rem .5rem;
+  border-radius: 100px;
+  background: rgba(0,0,0,.4);
+  backdrop-filter: blur(6px);
+}
+.carousel__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.45);
+  border: none; cursor: pointer; padding: 0;
+  transition: background var(--t-fast), transform var(--t-fast);
+}
+.carousel__dot.is-active {
+  background: #fff;
+  transform: scale(1.3);
+}
+
+/* Progress bar (very subtle) */
+.carousel__progress {
+  position: absolute;
+  left: 0; bottom: 0;
+  height: 3px; width: 0;
+  background: linear-gradient(90deg, var(--brand-1), var(--brand-3));
+  z-index: 2;
+}
+
+/* Compact variant for the project modal */
+.carousel--compact .carousel__slide { aspect-ratio: 16 / 9; }
+.carousel--compact .carousel__btn { width: 38px; height: 38px; }
+
+/* Reveal state */
+.carousel[data-autoplay] .carousel__progress {
+  animation: carousel-progress 5s linear infinite;
+}
+@keyframes carousel-progress {
+  0%   { width: 0; }
+  100% { width: 100%; }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .carousel__btn { width: 36px; height: 36px; }
+  .carousel__caption { padding: .75rem .9rem; font-size: .85rem; }
+}
+
+/* Print: shrink carousel to first slide only */
+@media print {
+  .carousel__btn, .carousel__dots, .carousel__progress { display: none !important; }
+  .carousel { box-shadow: none; }
+  .carousel__track { transform: none !important; }
+  .carousel__slide:not(:first-child) { display: none; }
+}

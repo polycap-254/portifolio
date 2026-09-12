@@ -7,6 +7,7 @@
 $items = [
     ['key' => 'dashboard',  'href' => '/admin/dashboard.php',  'icon' => 'fa-gauge-high',     'label' => 'Dashboard'],
     ['key' => 'profile',    'href' => '/admin/profile.php',    'icon' => 'fa-id-badge',       'label' => 'Profile'],
+    ['key' => 'gallery',    'href' => '/admin/gallery.php',    'icon' => 'fa-images',         'label' => 'Gallery'],
     ['key' => 'education',  'href' => '/admin/education.php',  'icon' => 'fa-graduation-cap', 'label' => 'Education'],
     ['key' => 'skills',     'href' => '/admin/skills.php',     'icon' => 'fa-code',           'label' => 'Skills'],
     ['key' => 'projects',   'href' => '/admin/projects.php',   'icon' => 'fa-diagram-project','label' => 'Projects'],

@@ -416,3 +416,36 @@ INSERT INTO `services` (`title`, `description`, `icon_class`, `display_order`) V
 -- =============================================================
 -- END OF SCHEMA
 -- =============================================================
+
+-- =============================================================
+-- ADDITIONAL TABLES (added during development)
+-- =============================================================
+
+CREATE TABLE IF NOT EXISTS `gallery_images` (
+  `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `title`         VARCHAR(180) DEFAULT NULL,
+  `caption`       VARCHAR(300) DEFAULT NULL,
+  `image`         VARCHAR(255) NOT NULL,
+  `display_order` INT          NOT NULL DEFAULT 0,
+  `is_active`     TINYINT(1)   NOT NULL DEFAULT 1,
+  `created_at`    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_gallery_order` (`display_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `project_images` (
+  `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `project_id`    INT UNSIGNED NOT NULL,
+  `image`         VARCHAR(255) NOT NULL,
+  `caption`       VARCHAR(300) DEFAULT NULL,
+  `display_order` INT          NOT NULL DEFAULT 0,
+  `created_at`    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_project_images_project` (`project_id`),
+  CONSTRAINT `fk_project_images_project`
+    FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Recovery key support (added during development)
+ALTER TABLE `users` ADD COLUMN `recovery_key_hash` VARCHAR(255) DEFAULT NULL;

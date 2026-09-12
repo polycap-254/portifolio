@@ -97,6 +97,11 @@ $flashes = getFlash();
                 <i class="fas fa-right-to-bracket"></i> Sign In
             </button>
         </form>
+                <p style="text-align:center;margin-top:1rem;">
+            <a href="<?= url('/admin/forgot_password.php') ?>" style="font-size:.85rem;color:var(--muted);">
+                <i class="fas fa-key"></i> Forgot password?
+            </a>
+        </p>
 
         <p class="login-card__foot">
             <a href="<?= url('/') ?>"><i class="fas fa-arrow-left"></i> Back to site</a>
