@@ -2093,3 +2093,199 @@ body {
   .gradient-text,
   .hero__title span { color: #111 !important; -webkit-text-fill-color: #111 !important; }
 }
+
+/* =============================================================
+   THEME OVERRIDE — EMERALD / GREEN PALETTE
+   (Placed after the Ibiza sunset block on purpose: wins by order.)
+   To revert to sunset, delete this block.
+   ============================================================= */
+:root {
+  /* Brand trio used everywhere a gradient is applied */
+  --brand-1: #059669;   /* deep emerald       */
+  --brand-2: #10b981;   /* emerald / primary  */
+  --brand-3: #84cc16;   /* lime accent        */
+  --accent:  #34d399;   /* soft mint halo     */
+
+  /* Focus ring tone */
+  --ring: rgba(16, 185, 129, .40);
+
+  /* Body background glows */
+  --sun-1: rgba(16, 185, 129, .10);   /* (still named sun-*, now emerald) */
+  --sun-2: rgba(132, 204, 22, .10);   /* lime                             */
+}
+
+[data-theme="dark"] {
+  --brand-1: #10b981;
+  --brand-2: #22c55e;
+  --brand-3: #a3e635;
+  --accent:  #34d399;
+  --ring:    rgba(34, 197, 94, .50);
+
+  --sun-1: rgba(16, 185, 129, .16);
+  --sun-2: rgba(132, 204, 22, .14);
+}
+
+/* Body ambient glows → emerald + lime */
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--sun-1), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%,   var(--sun-2), transparent 60%),
+    var(--bg);
+}
+
+/* Hero ring: emerald → lime conic sweep */
+.profile-ring {
+  background: conic-gradient(from 210deg, #059669, #10b981, #84cc16, #34d399, #059669);
+  box-shadow: 0 30px 70px -30px rgba(16, 185, 129, .75);
+}
+.profile-ring::after {
+  background: radial-gradient(circle at 30% 20%, rgba(52, 211, 153, .30), transparent 60%);
+}
+
+/* Brand mark (navbar + footer + login) */
+.navbar__brand-mark,
+.footer__brand-mark,
+.login-card__head .navbar__brand-mark {
+  background: linear-gradient(135deg, #059669, #10b981 55%, #84cc16);
+  box-shadow: 0 8px 22px -8px rgba(16, 185, 129, .7);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(120deg, #059669, #10b981 45%, #84cc16);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Primary buttons */
+.btn--primary {
+  background: linear-gradient(120deg, #059669, #10b981 60%, #22c55e);
+  box-shadow: 0 8px 22px -10px rgba(16, 185, 129, .75);
+}
+.btn--primary:hover {
+  box-shadow: 0 14px 30px -10px rgba(16, 185, 129, .95);
+}
+
+/* Section eyebrow dot */
+.eyebrow::before {
+  background: linear-gradient(120deg, #059669, #84cc16);
+}
+.eyebrow { color: #10b981; }
+
+/* Skill bars + active tabs + sidebar active */
+.skill__bar span {
+  background: linear-gradient(90deg, #059669, #10b981 60%, #84cc16);
+}
+.tab.is-active {
+  background: linear-gradient(120deg, #059669, #10b981);
+  box-shadow: 0 8px 22px -10px rgba(16, 185, 129, .75);
+}
+.admin-sidebar__link.is-active {
+  background: linear-gradient(120deg, #059669, #10b981);
+  box-shadow: 0 8px 20px -10px rgba(16, 185, 129, .85);
+}
+
+/* Social icons gradient hover */
+.hero__socials a:hover,
+.footer__socials a:hover {
+  background: linear-gradient(135deg, #059669, #10b981 55%, #84cc16);
+}
+
+/* Floating quick-contact buttons: swap Call & SMS to greens (WhatsApp stays brand) */
+.quick-contact__btn--call { --brand-color: #10b981; }  /* emerald */
+.quick-contact__btn--sms  { --brand-color: #84cc16; }  /* lime    */
+
+/* Back-to-top button */
+.back-to-top {
+  background: linear-gradient(135deg, #059669, #22c55e);
+  box-shadow: 0 12px 30px -10px rgba(16, 185, 129, .85);
+}
+
+/* Focus outline */
+:focus-visible { outline-color: #10b981; }
+
+/* Scrollbar (chrome) */
+::-webkit-scrollbar-thumb:hover { background: #10b981; }
+
+/* ---------- Footer: deep forest with emerald glow ---------- */
+.site-footer {
+  background:
+    radial-gradient(900px 400px at 0% 0%,   rgba(16, 185, 129, .16), transparent 60%),
+    radial-gradient(900px 400px at 100% 100%, rgba(132, 204, 22, .14), transparent 60%),
+    linear-gradient(180deg, #071911 0%, #04120b 100%);
+  border-top: 1px solid rgba(52, 211, 153, .14);
+}
+.site-footer .footer__heading { color: #ecfdf5; }
+.site-footer .footer__heading::after {
+  background: linear-gradient(90deg, #10b981, #84cc16);
+}
+.site-footer .footer__links a,
+.site-footer .footer__links li,
+.site-footer .footer__contact li { color: #b8c9c2; }
+.site-footer .footer__links a:hover { color: #6ee7b7; }
+.site-footer .footer__links a::before { background: #6ee7b7; }
+.site-footer .footer__contact i {
+  color: #34d399;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, .45));
+}
+.site-footer .footer__socials a:hover {
+  background: linear-gradient(135deg, #059669, #84cc16);
+  box-shadow: 0 12px 28px -10px rgba(16, 185, 129, .85);
+}
+.site-footer .btn--outline:hover {
+  border-color: #6ee7b7;
+  background: rgba(110, 231, 183, .10);
+}
+.site-footer .footer__bottom::before {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(16, 185, 129, .45) 30%,
+    rgba(132, 204, 22, .45) 70%,
+    transparent 100%);
+}
+
+/* ---------- Project / service / about hover borders ---------- */
+.about-card:hover,
+.service:hover,
+.project-card:hover {
+  border-color: rgba(16, 185, 129, .55);
+}
+.project-card::before {
+  background: linear-gradient(120deg,
+    transparent 30%,
+    rgba(132, 204, 22, .14) 50%,
+    transparent 70%);
+}
+
+/* ---------- Skill bar glow on complete ---------- */
+.skill.is-visible .skill__bar span {
+  box-shadow: 0 0 12px -2px rgba(132, 204, 22, .55);
+}
+
+/* ---------- Secondary detail fixes ---------- */
+.timeline__dot {
+  border-color: #10b981;
+  color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, .18);
+}
+.timeline__card .org,
+.service__cta,
+.about-card__hint,
+.project-card__cat { color: #10b981; }
+
+.contact__row i,
+.service__icon,
+.about-card__icon,
+.skill__icon {
+  color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, .14), rgba(132, 204, 22, .14));
+}
+
+.contact__row:hover { border-color: #10b981; }
+
+/* ---------- Print: keep green off paper ---------- */
+@media print {
+  .gradient-text,
+  .hero__title span { color: #111 !important; -webkit-text-fill-color: #111 !important; }
+}
