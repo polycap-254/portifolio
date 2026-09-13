@@ -2,12 +2,23 @@
 /**
  * admin/projects.php
  * ------------------------------------------------------------
- * Full CRUD for `projects` table.
- * - List:   default (with category filter tabs)
- * - Add:    ?action=new
- * - Edit:   ?action=edit&id=N
- * - Save:   POST (INSERT or UPDATE) with optional image upload
- * - Delete: POST (?action=delete&id=N)  — removes image file too
+ * Full CRUD for `projects` table + per-project gallery images.
+ *
+ * Actions:
+ *  - List:                default (with category filter tabs)
+ *  - New:                 ?action=new
+ *  - Edit:                ?action=edit&id=N
+ *  - Save:                POST form_action=save
+ *  - Delete project:      POST form_action=delete
+ *  - Delete gallery img:  POST form_action=delete_image
+ *
+ * Notes:
+ *  - On save, if the request contains gallery_images[], each file
+ *    is uploaded and inserted into `project_images`.
+ *  - Saving redirects back to the edit view so uploaded images
+ *    are immediately visible.
+ *  - The delete_image handler is top-level, before save, so it
+ *    never interferes with the save branch.
  */
 
 require_once __DIR__ . '/../includes/auth.php';
@@ -23,7 +34,39 @@ $errors = [];
 const PROJECT_CATEGORIES = ['Web Development', 'PHP', 'JavaScript', 'Database', 'AI', 'Other'];
 
 /* =========================================================
-   POST — SAVE
+   POST — DELETE GALLERY IMAGE
+   (Must run before save handler; it's a standalone action.)
+   ========================================================= */
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '') === 'delete_image') {
+    if (!verifyCsrf()) {
+        setFlash('error', 'Security check failed.');
+    } else {
+        $iid = (int)($_POST['image_id'] ?? 0);
+        if ($iid > 0) {
+            try {
+                $s = $pdo->prepare('SELECT image FROM project_images WHERE id = :id');
+                $s->execute([':id' => $iid]);
+                $img = (string)$s->fetchColumn();
+
+                $pdo->prepare('DELETE FROM project_images WHERE id = :id')->execute([':id' => $iid]);
+
+                if ($img && str_starts_with($img, 'uploads/')) {
+                    $abs = __DIR__ . '/../' . $img;
+                    if (file_exists($abs)) @unlink($abs);
+                }
+                setFlash('success', 'Gallery image removed.');
+            } catch (Throwable $e) {
+                setFlash('error', APP_ENV === 'development'
+                    ? 'DB error: ' . $e->getMessage()
+                    : 'Could not delete image.');
+            }
+        }
+    }
+    redirect(url('/admin/projects.php?action=edit&id=' . (int)($_POST['id'] ?? 0)));
+}
+
+/* =========================================================
+   POST — SAVE (insert or update)
    ========================================================= */
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '') === 'save') {
     if (!verifyCsrf()) {
@@ -53,23 +96,23 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '
         if ($data['year'] !== '' && !preg_match('/^\d{4}$/', $data['year'])) {
             $errors[] = 'Year must be a 4-digit number (or left empty).';
         }
-        foreach (['github_url','live_url','documentation_url'] as $urlKey) {
+        foreach (['github_url', 'live_url', 'documentation_url'] as $urlKey) {
             if ($data[$urlKey] !== '' && !filter_var($data[$urlKey], FILTER_VALIDATE_URL)) {
                 $errors[] = ucfirst(str_replace('_', ' ', $urlKey)) . ' must be a valid URL.';
             }
         }
 
-        // ---- Image upload ----
+        // ---- Main image upload (optional) ----
         $newImage = null;
         if (empty($errors) && !empty($_FILES['image']['tmp_name'])) {
             $newImage = uploadImage($_FILES['image'], 'projects');
         }
 
-        // ---- Save ----
+        // ---- Save main project row ----
         if (!$errors) {
             try {
                 if ($editId > 0) {
-                    // Fetch old image to possibly delete
+                    // Fetch old image to delete if replaced
                     $oldStmt = $pdo->prepare('SELECT image FROM projects WHERE id = :id');
                     $oldStmt->execute([':id' => $editId]);
                     $oldImage = (string)$oldStmt->fetchColumn();
@@ -90,8 +133,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '
                          . ($newImage ? ', image = :image' : '')
                          . ' WHERE id = :id';
 
-                    $stmt = $pdo->prepare($sql);
-                    $stmt->execute([
+                    $bind = [
                         ':name'              => $data['name'],
                         ':short_description' => $data['short_description'],
                         ':full_description'  => $data['full_description'],
@@ -105,9 +147,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '
                         ':is_published'      => $data['is_published'],
                         ':display_order'     => $data['display_order'],
                         ':id'                => $editId,
-                    ] + ($newImage ? [':image' => $newImage] : []));
+                    ];
+                    if ($newImage) $bind[':image'] = $newImage;
 
-                    // Delete old image if replaced
+                    $pdo->prepare($sql)->execute($bind);
+
+                    // Remove old image file if replaced
                     if ($newImage && $oldImage && str_starts_with($oldImage, 'uploads/')) {
                         $abs = __DIR__ . '/../' . $oldImage;
                         if (file_exists($abs)) @unlink($abs);
@@ -140,58 +185,53 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '
                         ':is_published'      => $data['is_published'],
                         ':display_order'     => $data['display_order'],
                     ]);
+                    $editId = (int)$pdo->lastInsertId();
                     setFlash('success', 'Project added.');
                 }
-                if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '') === 'delete_image') {
-    if (verifyCsrf()) {
-        $iid = (int)($_POST['image_id'] ?? 0);
-        $pid = (int)($_POST['id'] ?? 0);
-        if ($iid > 0) {
-            $s = $pdo->prepare('SELECT image FROM project_images WHERE id=:id');
-            $s->execute([':id'=>$iid]);
-            $img = (string)$s->fetchColumn();
-            $pdo->prepare('DELETE FROM project_images WHERE id=:id')->execute([':id'=>$iid]);
-            if ($img && str_starts_with($img, 'uploads/')) {
-                $abs = __DIR__ . '/../' . $img;
-                if (file_exists($abs)) @unlink($abs);
-            }
-            setFlash('success', 'Gallery image removed.');
-        }
-    }
-    redirect(url('/admin/projects.php?action=edit&id=' . (int)($_POST['id'] ?? 0)));
-}
-                                // --- Extra project gallery images ---
-                if (!empty($_FILES['gallery_images']['tmp_name'][0])) {
-                    $gid = $editId > 0 ? $editId : (int)$pdo->lastInsertId();
-                    foreach ($_FILES['gallery_images']['tmp_name'] as $i => $tmp) {
-                        if (($_FILES['gallery_images']['error'][$i] ?? 1) !== UPLOAD_ERR_OK) continue;
-                        $single = [
-                            'tmp_name' => $tmp,
-                            'name'     => $_FILES['gallery_images']['name'][$i],
-                            'type'     => $_FILES['gallery_images']['type'][$i],
-                            'error'    => $_FILES['gallery_images']['error'][$i],
-                            'size'     => $_FILES['gallery_images']['size'][$i],
-                        ];
-                        $path = uploadImage($single, 'projects');
-                        if ($path) {
-                            $pdo->prepare('INSERT INTO project_images (project_id, image, display_order) VALUES (:p,:i,:o)')
-                                ->execute([':p'=>$gid, ':i'=>$path, ':o'=>999]);
-                        }
-                    }
-                }
-                clearOld();
-                redirect(url('/admin/projects.php'));
             } catch (Throwable $e) {
                 $errors[] = APP_ENV === 'development'
                     ? 'DB error: ' . $e->getMessage()
                     : 'Could not save the project.';
             }
         }
+
+        // ---- Extra gallery images (only if project save succeeded) ----
+        if (!$errors && !empty($_FILES['gallery_images']['tmp_name'][0])) {
+            try {
+                foreach ($_FILES['gallery_images']['tmp_name'] as $i => $tmp) {
+                    if (($_FILES['gallery_images']['error'][$i] ?? 1) !== UPLOAD_ERR_OK) continue;
+                    if (empty($tmp)) continue;
+
+                    $single = [
+                        'tmp_name' => $tmp,
+                        'name'     => $_FILES['gallery_images']['name'][$i],
+                        'type'     => $_FILES['gallery_images']['type'][$i],
+                        'error'    => $_FILES['gallery_images']['error'][$i],
+                        'size'     => $_FILES['gallery_images']['size'][$i],
+                    ];
+                    $path = uploadImage($single, 'projects');
+                    if ($path) {
+                        $pdo->prepare('INSERT INTO project_images (project_id, image, display_order) VALUES (:p, :i, :o)')
+                            ->execute([':p' => $editId, ':i' => $path, ':o' => 999]);
+                    }
+                }
+            } catch (Throwable $e) {
+                setFlash('error', APP_ENV === 'development'
+                    ? 'Gallery upload error: ' . $e->getMessage()
+                    : 'Some gallery images could not be saved.');
+            }
+        }
+
+        // ---- Success: redirect back to the edit view ----
+        if (!$errors) {
+            clearOld();
+            redirect(url('/admin/projects.php?action=edit&id=' . $editId));
+        }
     }
 }
 
 /* =========================================================
-   POST — DELETE
+   POST — DELETE PROJECT
    ========================================================= */
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '') === 'delete') {
     if (!verifyCsrf()) {
@@ -200,16 +240,31 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '
         $deleteId = (int)($_POST['id'] ?? 0);
         if ($deleteId > 0) {
             try {
+                // Delete gallery image files first
+                $gi = $pdo->prepare('SELECT image FROM project_images WHERE project_id = :pid');
+                $gi->execute([':pid' => $deleteId]);
+                foreach ($gi->fetchAll(PDO::FETCH_COLUMN) as $img) {
+                    if ($img && str_starts_with($img, 'uploads/')) {
+                        $abs = __DIR__ . '/../' . $img;
+                        if (file_exists($abs)) @unlink($abs);
+                    }
+                }
+                // Remove gallery rows (also cascades via FK, but explicit is fine)
+                $pdo->prepare('DELETE FROM project_images WHERE project_id = :pid')
+                    ->execute([':pid' => $deleteId]);
+
+                // Delete main image file
                 $stmt = $pdo->prepare('SELECT image FROM projects WHERE id = :id');
                 $stmt->execute([':id' => $deleteId]);
                 $img = (string)$stmt->fetchColumn();
-
-                $pdo->prepare('DELETE FROM projects WHERE id = :id')->execute([':id' => $deleteId]);
-
                 if ($img && str_starts_with($img, 'uploads/')) {
                     $abs = __DIR__ . '/../' . $img;
                     if (file_exists($abs)) @unlink($abs);
                 }
+
+                // Delete the project row
+                $pdo->prepare('DELETE FROM projects WHERE id = :id')->execute([':id' => $deleteId]);
+
                 setFlash('success', 'Project deleted.');
             } catch (Throwable $e) {
                 setFlash('error', 'Could not delete project.');
@@ -220,7 +275,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['form_action'] ?? '
 }
 
 /* =========================================================
-   LOAD
+   LOAD DATA
    ========================================================= */
 $rows = $pdo->query(
     'SELECT * FROM projects
@@ -279,7 +334,7 @@ require_once __DIR__ . '/partials/admin_sidebar.php';
           if (old($key) !== '') return old($key);
           return $editing[$key] ?? $default;
       };
-      $img = $editing['image'] ?? '';
+      $img    = $editing['image'] ?? '';
       $imgUrl = $img && file_exists(__DIR__ . '/../' . $img) ? url($img) : '';
     ?>
     <form method="post" enctype="multipart/form-data" class="panel">
@@ -356,7 +411,7 @@ require_once __DIR__ . '/partials/admin_sidebar.php';
             </div>
 
             <div class="form-group">
-                <label>Project Image</label>
+                <label>Project Image (main cover)</label>
                 <div class="img-preview">
                     <div class="img-preview__thumb" id="projectPreview" style="width:120px;height:80px;border-radius:10px;">
                         <?php if ($imgUrl): ?>
@@ -397,40 +452,48 @@ require_once __DIR__ . '/partials/admin_sidebar.php';
                 </div>
             </div>
         </div>
-<?php if (!empty($editing['id'])): ?>
-    <div class="panel__head" style="margin-top:1.5rem;">
-        <h2>Project Gallery Images</h2>
-    </div>
-    <?php
-      $extraImages = $pdo->prepare('SELECT * FROM project_images WHERE project_id = :pid ORDER BY display_order, id');
-      $extraImages->execute([':pid' => (int)$editing['id']]);
-      $extraImages = $extraImages->fetchAll();
-    ?>
-    <?php if ($extraImages): ?>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.75rem;margin-bottom:1rem;">
-            <?php foreach ($extraImages as $ei): ?>
-                <div style="position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
-                    <img src="<?= url($ei['image']) ?>" alt="" style="width:100%;aspect-ratio:16/10;object-fit:cover;">
-                    <form method="post" style="position:absolute;top:6px;right:6px;" onsubmit="return confirm('Delete this gallery image?');">
-                        <?= csrfField() ?>
-                        <input type="hidden" name="form_action" value="delete_image">
-                        <input type="hidden" name="image_id" value="<?= (int)$ei['id'] ?>">
-                        <input type="hidden" name="id" value="<?= (int)$editing['id'] ?>">
-                        <button class="btn-icon btn-icon--danger" type="submit" style="background:rgba(0,0,0,.5);color:#fff;border-color:transparent;"><i class="fas fa-trash"></i></button>
-                    </form>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    <?php else: ?>
-        <p class="muted" style="margin:0 0 1rem;">No extra images yet.</p>
-    <?php endif; ?>
 
-    <div class="form-group">
-        <label>Add Gallery Images (multiple)</label>
-        <input class="form-control" type="file" name="gallery_images[]" multiple accept="image/jpeg,image/png,image/webp,image/gif">
-        <div class="hint">Select one or more images. Each max 3 MB.</div>
-    </div>
-<?php endif; ?>
+        <?php if (!empty($editing['id'])): ?>
+            <div class="panel__head" style="margin-top:1.5rem;">
+                <h2>Project Gallery Images</h2>
+            </div>
+            <?php
+              $extraStmt = $pdo->prepare('SELECT * FROM project_images WHERE project_id = :pid ORDER BY display_order, id');
+              $extraStmt->execute([':pid' => (int)$editing['id']]);
+              $extraImages = $extraStmt->fetchAll();
+            ?>
+            <?php if ($extraImages): ?>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.75rem;margin-bottom:1rem;">
+                    <?php foreach ($extraImages as $ei): ?>
+                        <div style="position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+                            <img src="<?= url($ei['image']) ?>" alt="" style="width:100%;aspect-ratio:16/10;object-fit:cover;display:block;">
+                            <form method="post"
+                                  style="position:absolute;top:6px;right:6px;"
+                                  onsubmit="return confirm('Delete this gallery image?');">
+                                <?= csrfField() ?>
+                                <input type="hidden" name="form_action" value="delete_image">
+                                <input type="hidden" name="image_id" value="<?= (int)$ei['id'] ?>">
+                                <input type="hidden" name="id" value="<?= (int)$editing['id'] ?>">
+                                <button class="btn-icon btn-icon--danger" type="submit"
+                                        style="background:rgba(0,0,0,.55);color:#fff;border-color:transparent;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p class="muted" style="margin:0 0 1rem;">No extra images yet.</p>
+            <?php endif; ?>
+
+            <div class="form-group">
+                <label>Add Gallery Images (multiple)</label>
+                <input class="form-control" type="file" name="gallery_images[]" multiple
+                       accept="image/jpeg,image/png,image/webp,image/gif">
+                <div class="hint">Select one or more images. Each max 3 MB.</div>
+            </div>
+        <?php endif; ?>
+
         <div class="admin-form-actions">
             <button type="submit" class="btn btn--primary">
                 <i class="fas fa-save"></i> <?= $action === 'edit' ? 'Update' : 'Create' ?>
@@ -444,7 +507,8 @@ require_once __DIR__ . '/partials/admin_sidebar.php';
         const f = e.target.files[0];
         if (!f) return;
         const url = URL.createObjectURL(f);
-        document.getElementById('projectPreview').innerHTML = '<img src="' + url + '" alt="Preview" style="width:100%;height:100%;object-fit:cover;">';
+        document.getElementById('projectPreview').innerHTML =
+            '<img src="' + url + '" alt="Preview" style="width:100%;height:100%;object-fit:cover;">';
     });
     </script>
 
@@ -487,7 +551,7 @@ require_once __DIR__ . '/partials/admin_sidebar.php';
                     </thead>
                     <tbody>
                         <?php foreach ($rows as $r):
-                            $img = $r['image'] ?? '';
+                            $img    = $r['image'] ?? '';
                             $hasImg = $img && file_exists(__DIR__ . '/../' . $img);
                         ?>
                             <tr data-proj-row-cat="<?= e($r['category']) ?>">
@@ -530,7 +594,9 @@ require_once __DIR__ . '/partials/admin_sidebar.php';
                                            title="Edit">
                                             <i class="fas fa-pen"></i>
                                         </a>
-                                        <a class="btn-icon" href="<?= url('/projects.php') ?>#project-<?= (int)$r['id'] ?>" target="_blank" title="View on site">
+                                        <a class="btn-icon"
+                                           href="<?= url('/#projects') ?>"
+                                           target="_blank" title="View on site">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <form method="post"
