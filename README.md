@@ -56,5 +56,8 @@ polycap-portfolio/
 - **Deployment**: coming in Phase 8
 
 ---
+## Related Projects
+
+- **ShopEasy** — Demo e-commerce site: https://shoponline.10001mb.com
 
 © 2026 Polycap Nyamongo Maturwe. All Rights Reserved.
